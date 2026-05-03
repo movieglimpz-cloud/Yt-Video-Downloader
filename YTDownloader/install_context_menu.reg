@@ -1,0 +1,23 @@
+Windows Registry Editor Version 5.00
+
+; =====================================================
+; YouTube Downloader - Right-click Context Menu
+; Adds "Download YouTube Video Here" to folder menus
+; Double-click this file to install
+; =====================================================
+
+; --- Right-click ON a folder ---
+[HKEY_CLASSES_ROOT\Directory\shell\YTDownloader]
+@="Download YouTube Video Here"
+"Icon"="C:\\Windows\\System32\\shell32.dll,13"
+
+[HKEY_CLASSES_ROOT\Directory\shell\YTDownloader\command]
+@="\"C:\\Users\\itscy\\AppData\\Local\\Programs\\Python\\Python311\\pythonw.exe\" \"F:\\My Graphic Design Work\\My Ai Tools\\YTDownloader\\yt_download.py\" \"%V\""
+
+; --- Right-click INSIDE a folder (background) ---
+[HKEY_CLASSES_ROOT\Directory\Background\shell\YTDownloader]
+@="Download YouTube Video Here"
+"Icon"="C:\\Windows\\System32\\shell32.dll,13"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\YTDownloader\command]
+@="\"C:\\Users\\itscy\\AppData\\Local\\Programs\\Python\\Python311\\pythonw.exe\" \"F:\\My Graphic Design Work\\My Ai Tools\\YTDownloader\\yt_download.py\" \"%V\""

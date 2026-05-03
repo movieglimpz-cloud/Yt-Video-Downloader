@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Downloader</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0ede8;
+    --muted: #6b6760;
+    --accent: #c8f04a;
+    --accent-dim: rgba(200,240,74,0.12);
+    --accent-dim2: rgba(200,240,74,0.22);
+    --red: #ff5f5f;
+    --red-dim: rgba(255,95,95,0.12);
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 560px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .header { margin-bottom: 2.5rem; }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: var(--text); }
+  .tagline { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .field { margin-bottom: 1.25rem; }
+  .field:last-child { margin-bottom: 0; }
+
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  .path-row { display: flex; gap: 8px; }
+  .path-row input { flex: 1; }
+  .path-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 14px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .path-btn:hover { border-color: var(--border2); color: var(--text); }
+
+  .saved-tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .saved-tag.show { opacity: 1; }
+
+  .quality-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .q-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  .q-btn .q-label { font-size: 13px; font-weight: 500; display: block; color: var(--text); }
+  .q-btn .q-sub { font-size: 10px; color: var(--muted); display: block; margin-top: 2px; }
+  .q-btn:hover { border-color: var(--border2); }
+  .q-btn.active { background: var(--accent-dim); border-color: var(--accent); }
+  .q-btn.active .q-label { color: var(--accent); }
+  .q-btn.active .q-sub { color: rgba(200,240,74,0.6); }
+
+  .dl-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    transition: all 0.15s;
+    margin-top: 1.5rem;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .dl-btn:hover { background: #d4f55a; transform: translateY(-1px); }
+  .dl-btn:active { transform: translateY(0); }
+  .dl-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; border: 1px solid var(--border); }
+
+  .progress-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem 1.75rem;
+    display: none;
+    margin-bottom: 1rem;
+  }
+  .progress-card.show { display: block; animation: fadeUp 0.3s ease both; }
+
+  .prog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .prog-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .prog-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .prog-status.error { background: var(--red-dim); color: var(--red); }
+  .prog-status.done { background: var(--accent-dim2); color: var(--accent); }
+
+  .progress-bar-bg { background: var(--surface2); border-radius: 4px; height: 4px; overflow: hidden; margin-bottom: 0.75rem; }
+  .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; width: 0%; }
+
+  .prog-meta { display: flex; gap: 1.5rem; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 0.75rem; }
+  .prog-meta span b { color: var(--text); font-weight: 500; }
+
+  .prog-filename { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .log-toggle { font-family: var(--mono); font-size: 11px; color: var(--muted); cursor: pointer; margin-top: 0.75rem; display: inline-block; }
+  .log-box {
+    margin-top: 0.5rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 11px; color: var(--muted); max-height: 140px; overflow-y: auto; display: none; line-height: 1.7;
+  }
+  .log-box.show { display: block; }
+  .done-msg { display: none; align-items: center; gap: 10px; margin-top: 0.75rem; padding: 10px 14px; background: var(--accent-dim); border-radius: 8px; font-family: var(--mono); font-size: 12px; color: var(--accent); }
+  .done-msg.show { display: flex; }
+
+  .footer { margin-top: 1.5rem; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 18 18" fill="none"><path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" fill="#0d0d0d"/><path d="M7 7L12 9L7 11V7Z" fill="#c8f04a"/></svg>
+      </div>
+      <h1>YT Downloader</h1>
+    </div>
+    <p class="tagline">// v2.0 · Account Mode · Permanent Fix</p>
+  </div>
+
+  <div style="display: flex; gap: 8px; margin-bottom: 1rem;">
+    <button class="path-btn" onclick="fixConnection()" style="flex: 1; padding: 8px; font-size: 10px; color: var(--accent);">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+      Fix Connection / Clear Cache
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label>YouTube URL</label>
+      <input type="text" id="urlInput" placeholder="https://youtube.com/watch?v=..." />
+    </div>
+
+    <div class="field">
+      <label>Output Folder</label>
+      <div class="path-row">
+        <input type="text" id="pathInput" placeholder="C:\Users\...\Videos\YT-Downloads" onchange="savePath()" />
+        <button class="path-btn" onclick="openFolder()" title="Open Folder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+        <button class="path-btn" onclick="savePath()">Save path</button>
+      </div>
+      <span class="saved-tag" id="savedTag">✓ path saved</span>
+    </div>
+
+    <div class="field">
+      <label>Download Engine</label>
+      <div class="quality-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 1rem;">
+        <div class="q-btn active" id="engine-ytdlp" onclick="selectEngine('yt-dlp')">
+          <span class="q-label">Fast</span>
+          <span class="q-sub">Standard (yt-dlp)</span>
+        </div>
+        <div class="q-btn" id="engine-pytubefix" onclick="selectEngine('pytubefix')">
+          <span class="q-label">Account</span>
+          <span class="q-sub">Persistent (OAuth)</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="loginSection" style="display: none; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; animation: fadeUp 0.3s ease;">
+      <div style="font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 4px;">YouTube Account Login</div>
+      <div id="loginInstruction" style="font-size: 11px; color: var(--text); line-height: 1.4;">Authorize this app for a permanent fix to bot detection.</div>
+      <div id="loginCodeArea" style="display: none; margin-top: 10px;">
+        <div style="font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 4px;">VISIT: <a id="loginUrl" href="#" target="_blank" style="color: var(--accent);">google.com/device</a></div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div id="loginCode" style="font-family: var(--mono); font-size: 18px; font-weight: 800; color: var(--accent); background: #000; padding: 4px 10px; border-radius: 4px; letter-spacing: 2px;">XXXX-XXXX</div>
+          <button class="path-btn" onclick="copyLoginCode()" style="padding: 6px;">Copy</button>
+        </div>
+      </div>
+      <button class="dl-btn" id="loginBtn" onclick="startLogin()" style="margin-top: 10px; padding: 10px; font-size: 12px;">Login to YouTube</button>
+    </div>
+    <div class="field">
+      <label>Quality</label>
+      <div class="quality-grid">
+        <div class="q-btn active" data-q="best" onclick="selectQ(this)"><span class="q-label">Best</span><span class="q-sub">auto</span></div>
+        <div class="q-btn" data-q="1080" onclick="selectQ(this)"><span class="q-label">1080p</span><span class="q-sub">FHD</span></div>
+        <div class="q-btn" data-q="720" onclick="selectQ(this)"><span class="q-label">720p</span><span class="q-sub">HD</span></div>
+        <div class="q-btn" data-q="480" onclick="selectQ(this)"><span class="q-label">480p</span><span class="q-sub">SD</span></div>
+        <div class="q-btn" data-q="audio" onclick="selectQ(this)"><span class="q-label">MP3</span><span class="q-sub">audio</span></div>
+      </div>
+    </div>
+
+    <button class="dl-btn" id="dlBtn" onclick="startDownload()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2V10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13H13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Download
+    </button>
+  </div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; margin: 2rem 0 1rem;">
+    <h2 style="font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em;">Downloads</h2>
+    <button class="path-btn" onclick="clearCompleted()" style="font-size: 10px;">Clear Completed</button>
+  </div>
+  <div id="downloadsList"></div>
+
+  <div class="footer">open http://localhost:5050 · runs fully local</div>
+</div>
+
+<script>
+  let selectedQ = 'best';
+  let selectedEngine = 'yt-dlp';
+  let activeTasks = new Set();
+  let logStates = {};
+
+  async function loadConfig() {
+    try {
+      const r = await fetch('/api/config');
+      const cfg = await r.json();
+      if (cfg.output_path) document.getElementById('pathInput').value = cfg.output_path;
+    } catch(e) {}
+  }
+  loadConfig();
+
+  function selectQ(el) {
+    document.querySelectorAll('.quality-grid:not(.engine-grid) .q-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    selectedQ = el.dataset.q;
+  }
+
+  function selectEngine(engine) {
+    selectedEngine = engine;
+    document.getElementById('engine-ytdlp').classList.toggle('active', engine === 'yt-dlp');
+    document.getElementById('engine-pytubefix').classList.toggle('active', engine === 'pytubefix');
+    document.getElementById('loginSection').style.display = engine === 'pytubefix' ? 'block' : 'none';
+  }
+
+  async function savePath() {
+    const path = document.getElementById('pathInput').value.trim();
+    if (!path) return;
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({output_path: path})
+    });
+    const tag = document.getElementById('savedTag');
+    tag.classList.add('show');
+    setTimeout(() => tag.classList.remove('show'), 2000);
+  }
+
+  async function openFolder(specificPath) {
+    const path = specificPath || document.getElementById('pathInput').value.trim();
+    const r = await fetch('/api/open_folder', { 
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({path: path})
+    });
+    const d = await r.json();
+    if (d.error) alert(d.error);
+  }
+
+  async function fixConnection() {
+    const btn = event.currentTarget;
+    const oldText = btn.innerHTML;
+    btn.innerHTML = 'Fixing...';
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/fix_connection', { method: 'POST' });
+      if (r.status === 404) {
+        alert("Server Update Required:\nPlease close the black Python window and run 'launch.bat' again to apply the new fix.");
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+        return;
+      }
+      const d = await r.json();
+      if (d.ok) {
+        alert("Success: Cache cleared and connection reset.\nYouTube blocks should be resolved now.");
+      } else {
+        alert("Error: " + (d.error || "Could not fix connection"));
+      }
+    } catch(e) { 
+      alert("Connection lost. Please restart the application (launch.bat)."); 
+    }
+    btn.innerHTML = oldText;
+    btn.disabled = false;
+  }
+
+  async function startDownload() {
+    const urlInput = document.getElementById('urlInput');
+    const url = urlInput.value.trim();
+    const path = document.getElementById('pathInput').value.trim();
+    if (!url) { urlInput.focus(); return; }
+    urlInput.value = '';
+    try {
+      const r = await fetch('/api/download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ url, quality: selectedQ, output_path: path, engine: selectedEngine })
+      });
+      const data = await r.json();
+      if (data.error) { alert(data.error); return; }
+      createTaskUI(data.task_id, url);
+      pollProgress(data.task_id);
+    } catch(e) { alert('Could not connect to server.'); }
+  }
+
+  function createTaskUI(taskId, url) {
+    const container = document.getElementById('downloadsList');
+    const div = document.createElement('div');
+    div.className = 'progress-card show';
+    div.id = `task-${taskId}`;
+    div.innerHTML = `
+      <div class="prog-header">
+        <span class="prog-title" id="title-${taskId}">Initializing...</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="prog-status" id="status-${taskId}">0%</span>
+          <button class="path-btn" id="stop-${taskId}" onclick="stopTask('${taskId}')" style="padding: 4px 8px; color: var(--red); border-color: var(--red-dim);">Stop</button>
+        </div>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-${taskId}"></div></div>
+      <div class="prog-meta"><span>Speed <b id="speed-${taskId}">—</b></span><span>ETA <b id="eta-${taskId}">—</b></span></div>
+      <div class="prog-filename" id="file-${taskId}" title="${url}">${url}</div>
+      <div class="done-msg" id="done-${taskId}">✓ Saved to folder</div>
+      <span class="log-toggle" onclick="toggleTaskLog('${taskId}')">▸ show log</span>
+      <div class="log-box" id="log-${taskId}"></div>
+    `;
+    container.prepend(div);
+  }
+
+  async function pollProgress(taskId) {
+    activeTasks.add(taskId);
+    const interval = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/progress/${taskId}`);
+        const d = await r.json();
+        const pct = Math.round(d.percent || 0);
+        document.getElementById(`bar-${taskId}`).style.width = pct + '%';
+        document.getElementById(`status-${taskId}`).textContent = d.status === 'stopped' ? 'stopped' : pct + '%';
+        if (d.speed) document.getElementById(`speed-${taskId}`).textContent = d.speed;
+        if (d.eta) document.getElementById(`eta-${taskId}`).textContent = d.eta;
+        if (d.filename) document.getElementById(`file-${taskId}`).textContent = d.filename;
+        if (d.log && d.log.length) {
+            const box = document.getElementById(`log-${taskId}`);
+            box.innerHTML = d.log.map(l => `<div>${l}</div>`).join('');
+        }
+        if (['done', 'error', 'stopped'].includes(d.status)) {
+          clearInterval(interval);
+          activeTasks.delete(taskId);
+          document.getElementById(`stop-${taskId}`).style.display = 'none';
+          if (d.status === 'done') {
+            document.getElementById(`status-${taskId}`).className = 'prog-status done';
+            document.getElementById(`title-${taskId}`).textContent = 'Complete';
+            document.getElementById(`done-${taskId}`).classList.add('show');
+          } else {
+            document.getElementById(`status-${taskId}`).className = 'prog-status error';
+            document.getElementById(`title-${taskId}`).textContent = d.error || 'Error';
+          }
+        }
+      } catch(e) { clearInterval(interval); }
+    }, 800);
+  }
+
+  function toggleTaskLog(taskId) {
+    const box = document.getElementById(`log-${taskId}`);
+    const show = box.style.display !== 'block';
+    box.style.display = show ? 'block' : 'none';
+    box.previousElementSibling.textContent = show ? '▾ hide log' : '▸ show log';
+  }
+
+  function clearCompleted() {
+    document.querySelectorAll('.progress-card').forEach(c => {
+      if (!activeTasks.has(c.id.replace('task-', ''))) c.remove();
+    });
+  }
+
+  let loginPolling = null;
+  async function startLogin() {
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.textContent = 'Generating Code...';
+    
+    await fetch('/api/login', { method: 'POST' });
+    
+    if (loginPolling) clearInterval(loginPolling);
+    loginPolling = setInterval(async () => {
+      const r = await fetch('/api/login_status');
+      const d = await r.json();
+      
+      if (d.code) {
+        document.getElementById('loginCodeArea').style.display = 'block';
+        document.getElementById('loginCode').textContent = d.code;
+        document.getElementById('loginUrl').href = d.url;
+        document.getElementById('loginUrl').textContent = d.url.replace('https://', '');
+        btn.textContent = 'Waiting for authorization...';
+      }
+      
+      if (d.status === 'success') {
+        clearInterval(loginPolling);
+        document.getElementById('loginInstruction').textContent = '✅ Success! You are logged in.';
+        document.getElementById('loginCodeArea').style.display = 'none';
+        btn.style.display = 'none';
+        alert("YouTube Login Successful! 'Account' mode is now fully permanent.");
+      }
+      
+      if (d.status === 'error') {
+        clearInterval(loginPolling);
+        alert("Login failed: " + d.error);
+        btn.disabled = false;
+        btn.textContent = 'Retry Login';
+      }
+    }, 2000);
+  }
+
+  function copyLoginCode() {
+    const code = document.getElementById('loginCode').textContent;
+    navigator.clipboard.writeText(code);
+    alert("Code copied!");
+  }
+</script>
+</body>
+</html>
