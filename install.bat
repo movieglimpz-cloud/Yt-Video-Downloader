@@ -41,7 +41,10 @@ if !errorlevel! neq 0 (
     pause
     exit /b 1
 ) else (
-    call :GetPyVer "!PYTHON_EXE!"
+    "!PYTHON_EXE!" --version > pyver.txt 2>&1
+    set /p PY_VER=<pyver.txt
+    del pyver.txt
+    echo [SUCCESS] Found !PY_VER!
 )
 echo.
 
@@ -98,9 +101,3 @@ echo ==============================================
 echo You can now run 'launch.bat' to start the application.
 echo.
 pause
-exit /b 0
-
-:GetPyVer
-for /f "tokens=*" %%a in ('"%~1" --version') do set PY_VER=%%a
-echo [SUCCESS] Found %PY_VER%
-exit /b 0
