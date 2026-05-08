@@ -8,10 +8,10 @@ echo.
 
 set "PYTHON_EXE=python"
 !PYTHON_EXE! --version >nul 2>&1
-if %errorlevel% neq 0 (
+if !errorlevel! neq 0 (
     set "PYTHON_EXE=%USERPROFILE%\AppData\Local\Programs\Python\Python311\python.exe"
-    !PYTHON_EXE! --version >nul 2>&1
-    if %errorlevel% neq 0 (
+    "!PYTHON_EXE!" --version >nul 2>&1
+    if !errorlevel! neq 0 (
         echo [ERROR] Python not found. Please run install.bat first.
         pause
         exit /b 1
